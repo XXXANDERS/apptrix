@@ -1,0 +1,10 @@
+asgiref==3.4.1
+Django==3.2.8
+django-debug-toolbar==3.2.2
+django-debug-toolbar-force==0.1.8
+django-nine==0.2.5
+djangorestframework==3.12.4
+Pillow==8.3.2
+pytz==2021.3
+six==1.16.0
+sqlparse==0.4.2

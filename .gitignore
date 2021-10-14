@@ -1,0 +1,5 @@
+/FindFriend/config.py
+/venv/
+/.idea/
+/FindFriend/db.sqlite3
+/FindFriend/media/
