@@ -18,11 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 
 from FindFriend import settings
+from users.views import ClientsView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api-auth/', include('rest_framework.urls')),
-    path('api/clients/', include('users.api.urls')),
+    path('api/', include('users.api.urls')),
+    path('accounts/profile/', ClientsView.as_view({'get': 'get'}))
 
 ]
 if settings.DEBUG:
