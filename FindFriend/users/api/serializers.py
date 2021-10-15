@@ -1,22 +1,21 @@
-from io import StringIO
-
 from rest_framework import serializers
-# from rest_framework.validators import
-from PIL import Image
+from rest_framework.validators import UniqueTogetherValidator
 
-from django.core.files.uploadedfile import InMemoryUploadedFile
-from users.models import CustomUser
+from users.models import CustomUser, UserMatch
 
 
-class ClientsSerializer(serializers.ModelSerializer):
-    # password = serializers.HiddenField()
+class UsersSerializer(serializers.ModelSerializer):
+    sex = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
         fields = ('email', 'first_name', 'last_name', 'avatar', 'sex')
 
+    def get_sex(self, obj):
+        return obj.get_sex_display()
 
-class ClientsCreateSerializer(serializers.ModelSerializer):
+
+class UsersCreateSerializer(serializers.ModelSerializer):
     # serializers.CharField(allow_blank=False)
 
     class Meta:
@@ -26,6 +25,7 @@ class ClientsCreateSerializer(serializers.ModelSerializer):
             'avatar': {'required': True},
             'first_name': {'required': True, 'allow_blank': False},
             'last_name': {'required': True, 'allow_blank': False},
+            'sex': {'required': True, 'allow_blank': False},
         }
         fields = ('email', 'password', 'first_name', 'last_name', 'avatar', 'sex')  # there what you want to initial.
 
@@ -35,7 +35,7 @@ class ClientsCreateSerializer(serializers.ModelSerializer):
         return value
 
     def create(self, validated_data):
-        client = CustomUser(
+        user = CustomUser(
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
@@ -43,7 +43,39 @@ class ClientsCreateSerializer(serializers.ModelSerializer):
             sex=validated_data.get('sex'),
         )
 
-        client.set_password(validated_data['password'])
-        client.save()
+        user.set_password(validated_data['password'])
+        user.save()
 
-        return client
+        return user
+
+
+class UsersMatchSerializer(serializers.ModelSerializer):
+    from_user = UsersSerializer(many=False)
+    for_user = UsersSerializer(many=False)
+
+    class Meta:
+        model = UserMatch
+        fields = ('from_user', 'for_user', 'like',)
+        depth = 1
+
+
+class UsersMatchCreateSerializer(serializers.ModelSerializer):
+    # from_user = UsersSerializer(default=serializers.CurrentUserDefault(), read_only=True)
+
+    # for_user = UsersSerializer(default=serializers., read_only=True)
+    # def validate_for_user(self, value):
+    #     if not value:
+    #         raise serializers.ValidationError('Пользователь не существует')
+    #     return value
+
+    class Meta:
+        model = UserMatch
+        fields = ('from_user', 'for_user', 'like',)
+        read_only_fields = ('from_user', 'for_user')
+
+        # validators = [
+        #     UniqueTogetherValidator(
+        #         queryset=UserMatch.objects.all(),
+        #         fields=['from_user', 'for_user']
+        #     )
+        # ]
