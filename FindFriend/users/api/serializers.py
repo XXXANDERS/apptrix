@@ -16,7 +16,10 @@ class UsersSerializer(serializers.ModelSerializer):
 
 
 class UsersCreateSerializer(serializers.ModelSerializer):
-    # serializers.CharField(allow_blank=False)
+    # sex = serializers.SerializerMethodField()
+    #
+    # def get_sex(self, obj):
+    #     return obj.get_sex_display()
 
     class Meta:
         model = CustomUser
@@ -42,7 +45,6 @@ class UsersCreateSerializer(serializers.ModelSerializer):
             avatar=validated_data['avatar'],
             sex=validated_data.get('sex'),
         )
-
         user.set_password(validated_data['password'])
         user.save()
 
@@ -60,14 +62,6 @@ class UsersMatchSerializer(serializers.ModelSerializer):
 
 
 class UsersMatchCreateSerializer(serializers.ModelSerializer):
-    # from_user = UsersSerializer(default=serializers.CurrentUserDefault(), read_only=True)
-
-    # for_user = UsersSerializer(default=serializers., read_only=True)
-    # def validate_for_user(self, value):
-    #     if not value:
-    #         raise serializers.ValidationError('Пользователь не существует')
-    #     return value
-
     class Meta:
         model = UserMatch
         fields = ('from_user', 'for_user', 'like',)

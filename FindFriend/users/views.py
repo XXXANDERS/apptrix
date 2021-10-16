@@ -1,37 +1,44 @@
-from django.shortcuts import render
+from decimal import Decimal
+
+from django.db.models import Q
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import mixins, status
 from rest_framework.decorators import api_view
 from rest_framework.generics import get_object_or_404
+from rest_framework.parsers import JSONParser, FormParser, MultiPartParser
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.reverse import reverse
-from rest_framework.viewsets import ModelViewSet, GenericViewSet
+from rest_framework.viewsets import GenericViewSet
 
+from users.geo import get_distance
 from users.api.serializers import UsersCreateSerializer, UsersMatchSerializer, UsersMatchCreateSerializer, \
     UsersSerializer
 from users.models import CustomUser, UserMatch
 
 
-# @api_view(['GET'])
-# def api_root(request, format=None):
-#     return Response({
-#         'clients': reverse('customuser-list', request=request, format=format),
-#     })
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'register': reverse('register', request=request, format=format),
+        'profile': reverse('profile', request=request, format=format),
+        'clients': reverse('clients-list', request=request, format=format),
+    })
 
 
-class UsersRegister(mixins.CreateModelMixin, GenericViewSet):
+class Profile(mixins.RetrieveModelMixin, GenericViewSet):
+    queryset = CustomUser.objects.all()
+    serializer_class = UsersSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
+
+class UsersCreate(mixins.CreateModelMixin, GenericViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UsersCreateSerializer
-
-
-# class Profile(mixins.RetrieveModelMixin, GenericViewSet):
-#     queryset = CustomUser.objects.all()
-#     serializer_class = UsersSerializer
-#     permission_classes = [IsAuthenticated]
-#
-#     def get_object(self):
-#         return self.request.user
 
 
 class UsersView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet):
@@ -40,16 +47,40 @@ class UsersView(mixins.RetrieveModelMixin, mixins.ListModelMixin, GenericViewSet
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['first_name', 'last_name', 'sex']
     permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request, *args, **kwargs):
+        d = request.query_params.get('distance')
+        if d:
+            if not d.replace('.', '', 1).isdigit() or len(d) > 9:
+                return Response({"distance": ["Выберите корректный вариант. "
+                                              "Дистанция должна быть действительным числом не более 9 символов."]})
+            self.queryset = self.users_nearby_filter(request.query_params.get('distance'), queryset=self.queryset)
+        return self.list(request, *args, **kwargs)
 
-
+    def users_nearby_filter(self, distance, queryset):
+        distance = Decimal(distance)
+        user = self.request.user
+        users = queryset.filter(~Q(longitude=None), ~Q(latitude=None)).values('id', 'latitude', 'longitude')
+        users_id = []
+        for u in users:
+            d = get_distance(user.latitude, user.longitude, u['latitude'], u['longitude'])
+            if d < distance:
+                users_id.append(u['id'])
+        users2 = CustomUser.objects.filter(id__in=users_id)
+        data = []
+        return users2
 
 
 class UsersMatchView(mixins.RetrieveModelMixin, mixins.CreateModelMixin, GenericViewSet):
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
     queryset = UserMatch.objects.select_related('from_user', 'for_user')
     permission_classes = [IsAuthenticated]
+
+    def __init__(self):
+        self.match = None
+        self.for_user = None
+        super(UsersMatchView, self).__init__()
 
     def get_serializer_class(self):
         if self.request.method in ['POST']:
@@ -66,23 +97,35 @@ class UsersMatchView(mixins.RetrieveModelMixin, mixins.CreateModelMixin, Generic
         return self.retrieve(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        self.for_user = CustomUser.objects.filter(id=self.kwargs['id']).first()
+        self.match = UserMatch.objects.filter(from_user=self.request.user, for_user=self.kwargs['id']).first()
         return self.create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         serializer.validated_data['from_user'] = self.request.user
-        serializer.validated_data['for_user'] = CustomUser.objects.filter(id=self.kwargs['id']).first()
+        serializer.validated_data['for_user'] = self.for_user
         serializer.save()
 
     def create(self, request, *args, **kwargs):
-        # for_user = CustomUser.objects.filter(id=self.kwargs['id']).first()
-        if not CustomUser.objects.filter(id=self.kwargs['id']).exists():
-            return Response('Пользователь не существует')
-        # request.data._mutable = True
-        # request.data['for_user'] = CustomUser.objects.filter(id=self.kwargs['id']).first().id
-        # request.data._mutable = False
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
+        if self.for_user == self.request.user:
+            return Response({'detail': 'добавление связи между одним пользователем невозможна'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        if self.match:
+            return Response({'detail': 'связь уже существует'}, status=status.HTTP_400_BAD_REQUEST)
+        if not self.for_user:
+            return Response({'detail': 'пользователь не найден'}, status=status.HTTP_204_NO_CONTENT)
+        r = super().create(request, *args, **kwargs)
+        return r
 
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+class UsersDistance(GenericViewSet):
+    def get(self, request, *args, **kwargs):
+        user1 = CustomUser.objects.filter(id=self.kwargs['id1']).first()
+        user2 = CustomUser.objects.filter(id=self.kwargs['id2']).first()
+        if user1 and user2:
+            if user1.latitude and user1.longitude and user2.latitude and user2.longitude:
+                # вычисляем расстояние между пользователями
+                d = get_distance(user1.latitude, user1.longitude, user2.latitude, user2.longitude)
+                return Response({'data': f'Расстояние равно {d} км'})
+            return Response(f'У пользователя отсутствуют гео-даные')
+        return Response(f'Пользователя(ей) не существует')

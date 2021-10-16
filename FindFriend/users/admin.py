@@ -17,7 +17,7 @@ class CustomUserAdmin(UserAdmin):
     ordering = ('email',)
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
-        (_('Personal info'), {'fields': ('first_name', 'last_name', 'avatar', 'sex')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'avatar', 'sex', 'latitude', 'longitude')}),
         ('Permissions', {'fields': ('is_staff', 'is_active'),
                          # ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
                          }),

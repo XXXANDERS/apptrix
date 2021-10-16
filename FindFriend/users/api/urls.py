@@ -1,15 +1,16 @@
 from django.urls import path, include
-from rest_framework.routers import SimpleRouter
 
-from users.views import UsersRegister, UsersMatchView, UsersView
+from users.views import UsersView, UsersCreate, UsersMatchView, UsersDistance, api_root
 
-router = SimpleRouter()
-# router.register(r'clients', ClientViewSet)
 urlpatterns = [
-    # path('', api_root),
+    path('', api_root),
     path('auth/', include('rest_framework.urls')),
-    path('clients/create/', UsersRegister.as_view({'post': 'create'})),
+    path('clients/create/', UsersCreate.as_view({'post': 'create'}), name='register'),
+    path('clients/<int:id>/', UsersView.as_view({'get': 'retrieve'})),
+    path('list/', UsersView.as_view({'get': 'get'}), name='clients-list'),
     path('clients/<int:id>/match/', UsersMatchView.as_view({'get': 'get', 'post': 'post'})),
-    path('list/', UsersView.as_view({'get': 'list'}))
+
+    # нужно ли?
+    path('clients/distance/<int:id1>/<int:id2>/', UsersDistance.as_view({'get': 'get'})),
+
 ]
-# urlpatterns += router.urls
