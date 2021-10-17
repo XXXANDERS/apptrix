@@ -1,5 +1,6 @@
 from decimal import Decimal
 
+from django.core.mail import send_mail, BadHeaderError
 from django.db.models import Q
 
 from django_filters.rest_framework import DjangoFilterBackend
@@ -114,8 +115,39 @@ class UsersMatchView(mixins.RetrieveModelMixin, mixins.CreateModelMixin, Generic
             return Response({'detail': 'связь уже существует'}, status=status.HTTP_400_BAD_REQUEST)
         if not self.for_user:
             return Response({'detail': 'пользователь не найден'}, status=status.HTTP_204_NO_CONTENT)
-        r = super().create(request, *args, **kwargs)
-        return r
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        response_data = serializer.data
+        if response_data.get('like'):
+            user1 = CustomUser.objects.get(id=response_data.get('from_user'))
+            user2 = CustomUser.objects.get(id=response_data.get('for_user'))
+            match2 = UserMatch.objects.filter(from_user=response_data.get('for_user'),
+                                              for_user=response_data.get('from_user')).first()
+            if match2 and match2.like:
+                response_data[
+                    'info'] = f'У вас взаимная симпатия с {user2.first_name} {user2.last_name}, почта = {user2.email}'
+
+                # отправка почты  (нужно настроить конфиг на сервере)
+                subject = 'FindFriend response'
+                try:
+                    send_mail(
+                        subject,
+                        f'«Вы понравились {user1.first_name} {user1.last_name}! '
+                        f'Почта участника: {user1.email}»',
+                        from_email=None, recipient_list=[f'{user2.email}']
+                    )
+                    send_mail(
+                        subject,
+                        f'«Вы понравились {user2.first_name} {user2.last_name}! '
+                        f'Почта участника: {user2.email}»',
+                        from_email=None, recipient_list=[f'{user1.email}']
+                    )
+                except BadHeaderError as e:
+                    print('Errors:', e)
+        return Response(response_data, status=status.HTTP_201_CREATED, headers=headers)
 
 
 class UsersDistance(GenericViewSet):

@@ -1,6 +1,7 @@
 from PIL import Image
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from django.core.mail import send_mail, BadHeaderError
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 
@@ -54,12 +55,6 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = ()
     objects = CustomUserManager()
 
-    # def clean(self):
-    #     if (self.latitude < -90) or (self.latitude > 90):
-    #         raise ValidationError('Широта должна быть в пределах [-90, 90]')
-    #     if (self.longitude < -180) or (self.longitude > 180):
-    #         raise ValidationError('Долгота должна быть в пределах [-180, 180]')
-
 
 class UserMatch(models.Model):
     LIKE_CHOICE = (
@@ -76,9 +71,26 @@ class UserMatch(models.Model):
     class Meta:
         unique_together = ['from_user', 'for_user']
 
-    def save(self, *args, **kwargs):
-        super().save(*args, **kwargs)
-        match = UserMatch.objects.filter(from_user=self.for_user, for_user=self.from_user).first()
-        if match and match.like:
-            print('Взаимная симпатия !')
-            # реализовать отправку email (или на уровне view класса)
+    # возможно лучше отправлять на уровне модели
+    # def save(self, *args, **kwargs):
+    #     super().save(*args, **kwargs)
+    #     if self.like:
+    #         match = UserMatch.objects.filter(from_user=self.for_user, for_user=self.from_user).first()
+    #         if match and match.like:
+    #             print('Взаимная симпатия !')
+    #             subject = 'FindFriend response'
+    #             try:
+    #                 send_mail(
+    #                     subject,
+    #                     f'«Вы понравились {match.for_user.first_name} {match.for_user.last_name}! '
+    #                     f'Почта участника: {match.for_user.email}»',
+    #                     from_email=None, recipient_list=[f'{match.from_user.email}']
+    #                 )
+    #                 send_mail(
+    #                     subject,
+    #                     f'«Вы понравились {match.from_user.first_name} {match.from_user.last_name}! '
+    #                     f'Почта участника: {match.from_user.email}»',
+    #                     from_email=None, recipient_list=[f'{match.for_user.email}']
+    #                 )
+    #             except BadHeaderError as e:
+    #                 print('Errors:', e)

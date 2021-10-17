@@ -9,7 +9,7 @@ def get_distance(lat1, lon1, lat2, lon2):
     lon2 *= Decimal(math.pi / 180)
     d_lon = lon2 - lon1
     # d_lat = lat2 - lat1
-    r = 6371.009  # среднее расстояние "радиусов" Земли. Погрешность = 0.005
+    r = 6371.009  # среднее расстояние "радиусов" Земли. Погрешность при вычислении получается = 0.005
     delta = math.atan(
         math.sqrt((math.cos(lat2) * math.sin(d_lon)) ** 2 +
                   (math.cos(lat1) * math.sin(lat2) - math.sin(lat1) * math.cos(lat2) * math.cos(d_lon)) ** 2) /

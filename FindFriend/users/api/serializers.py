@@ -9,18 +9,14 @@ class UsersSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomUser
-        fields = ('email', 'first_name', 'last_name', 'avatar', 'sex')
+        fields = ('first_name', 'last_name', 'avatar', 'sex')
+        # fields = ('email', 'first_name', 'last_name', 'avatar', 'sex')
 
     def get_sex(self, obj):
         return obj.get_sex_display()
 
 
 class UsersCreateSerializer(serializers.ModelSerializer):
-    # sex = serializers.SerializerMethodField()
-    #
-    # def get_sex(self, obj):
-    #     return obj.get_sex_display()
-
     class Meta:
         model = CustomUser
         extra_kwargs = {
