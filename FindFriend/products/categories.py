@@ -1,0 +1,48 @@
+# data from cat_parser
+
+categories_dict = {
+    'https://www.citilink.ru/catalog/gadzhety/':
+        [
+            'https://www.citilink.ru/catalog/ekshn-kamery/',
+            'https://www.citilink.ru/catalog/kvadrokoptery/',
+            'https://www.citilink.ru/catalog/aksessuary-dlya-kvadrokopterov/',
+            'https://www.citilink.ru/catalog/cifrovye-fotoramki/',
+            'https://www.citilink.ru/catalog/virtualnye-ochki/',
+            'https://www.citilink.ru/catalog/smart-chasy/',
+            'https://www.citilink.ru/catalog/fitnes-braslety/',
+            'https://www.citilink.ru/catalog/aksessuary-dlya-gadzhetov/'
+        ]
+    ,
+    'https://www.citilink.ru/catalog/aksessuary-dlya-planshetov/':
+        [
+            'https://www.citilink.ru/catalog/perehodniki-provoda/',
+            'https://www.citilink.ru/catalog/chehly-dlya-planshetov/',
+            'https://www.citilink.ru/catalog/zaschitnye-plenki-dlya-planshetov/',
+            'https://www.citilink.ru/catalog/dok-stancii-dlya-planshetov/',
+            'https://www.citilink.ru/catalog/derzhateli-podstavki/',
+            'https://www.citilink.ru/catalog/prochie-aksessuary-dlya-planshetov/',
+            'https://www.citilink.ru/catalog/karty-pamyati/'
+        ],
+    'https://www.citilink.ru/catalog/aksessuary-dlya-smartfonov/':
+        [
+            'https://www.citilink.ru/catalog/power-bank/',
+            'https://www.citilink.ru/catalog/stedikamy/',
+            'https://www.citilink.ru/catalog/karty-pamyati/',
+            'https://www.citilink.ru/catalog/naushniki/',
+            'https://www.citilink.ru/catalog/perehodniki-provoda/',
+            'https://www.citilink.ru/catalog/zaschitnye-plenki-i-stekla/',
+            'https://www.citilink.ru/catalog/chehly-dlya-smartfonov/',
+            'https://www.citilink.ru/catalog/selfi-palki/',
+            'https://www.citilink.ru/catalog/prochie-aksessuary-dlya-smartfonov/',
+            'https://www.citilink.ru/catalog/vneshnie-mody-dlya-smartfonov/',
+            'https://www.citilink.ru/catalog/portativnye-kolonki/',
+            'https://www.citilink.ru/catalog/derzhateli-dlya-smartfonov/',
+            'https://www.citilink.ru/catalog/sim-karty-tarifnye-plany/',
+            'https://www.citilink.ru/catalog/smart-trekery/'
+        ],
+    'https://www.citilink.ru/catalog/elektronnye-knigi-i-aksessuary/':
+        [
+            'https://www.citilink.ru/catalog/elektronnye-knigi/',
+            'https://www.citilink.ru/catalog/aksessuary-dlya-elektronnyh-knig/'
+        ]
+}

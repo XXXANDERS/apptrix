@@ -37,13 +37,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'users.apps.UsersConfig',
-
     'debug_toolbar',
     'rest_framework',
     'django_cleanup.apps.CleanupConfig',
     'imagekit',
     'django_filters',
+
+    'users.apps.UsersConfig',
+    'products.apps.ProductsConfig',
 
 ]
 
